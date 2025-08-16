@@ -4,6 +4,7 @@
     "compromise": "^14.10.0",
     "date-fns": "^2.29.3",
     "firebase": "^9.17.2",
+    "openai": "^5.12.2",
     "react": "^18.2.0",
     "react-calendar": "^4.0.0",
     "react-dom": "^18.2.0",
@@ -15,7 +16,6 @@
   "name": "frontend",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

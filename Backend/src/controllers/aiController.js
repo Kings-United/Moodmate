@@ -1,4 +1,5 @@
 const sentimentService = require('../services/sentimentService');
+const fireworksAIService = require('../services/fireworksAIService');
 const responseService = require('../services/responseService');
 const logger = require('../utils/logger');
 
@@ -15,7 +16,24 @@ const analyzeSentiment = async (req, res) => {
             return responseService.error(res, 'Text is required and must be a string', 400);
         }
 
-        const analysis = await sentimentService.analyzeSentiment(text);
+        let analysis;
+        
+        // Try Fireworks AI first, fallback to local analysis
+        try {
+            analysis = await fireworksAIService.analyzeSentiment(text);
+            logger.info('Using Fireworks AI for sentiment analysis', { 
+                textLength: text.length,
+                source: analysis.source 
+            });
+        } catch (fireworksError) {
+            logger.warn('Fireworks AI failed, using local analysis:', fireworksError.message);
+            analysis = await sentimentService.analyzeSentiment(text);
+            logger.info('Using local sentiment analysis as fallback', { 
+                textLength: text.length,
+                source: analysis.source 
+            });
+        }
+
         return responseService.success(res, analysis, 'Sentiment analysis completed');
     } catch (error) {
         logger.error('Error in sentiment analysis:', error);
@@ -39,11 +57,19 @@ const generateResponse = async (req, res) => {
             return responseService.error(res, 'Text or content is required and must be a string', 400);
         }
 
-        // Get sentiment analysis
-        const sentiment = await sentimentService.analyzeSentiment(entryText);
+        let response;
+        let sentiment;
         
-        // Generate response based on sentiment and mood
-        let response = generateAIResponse(entryText, sentiment, mood, emotions, context);
+        // Try Fireworks AI first, fallback to local analysis
+        try {
+            sentiment = await fireworksAIService.analyzeSentiment(entryText);
+            response = await fireworksAIService.generateResponse(entryText, mood, emotions, context);
+            logger.info('Using Fireworks AI for response generation');
+        } catch (fireworksError) {
+            logger.warn('Fireworks AI failed, using local analysis:', fireworksError.message);
+            sentiment = await sentimentService.analyzeSentiment(entryText);
+            response = generateAIResponse(entryText, sentiment, mood, emotions, context);
+        }
         
         return responseService.success(res, { 
             response, 
@@ -58,7 +84,7 @@ const generateResponse = async (req, res) => {
 };
 
 /**
- * Generate an AI response based on sentiment and mood
+ * Generate an AI response based on sentiment and mood (local fallback)
  * @private
  */
 const generateAIResponse = (text, sentiment, mood, emotions, context) => {
@@ -126,40 +152,49 @@ const generateAIResponse = (text, sentiment, mood, emotions, context) => {
  * @route GET /api/ai/crisis-support
  * @access Private
  */
-const getCrisisSupport = (req, res) => {
+const getCrisisSupport = async (req, res) => {
     try {
-        const crisisSupport = {
-            hotlines: [
-                {
-                    name: 'National Suicide Prevention Lifeline',
-                    number: '988',
-                    website: 'https://988lifeline.org/'
-                },
-                {
-                    name: 'Crisis Text Line',
-                    number: 'Text HOME to 741741',
-                    website: 'https://www.crisistextline.org/'
-                },
-                {
-                    name: 'Veterans Crisis Line',
-                    number: '1-800-273-8255, Press 1',
-                    website: 'https://www.veteranscrisisline.net/'
-                }
-            ],
-            resources: [
-                {
-                    title: 'Find a Therapist',
-                    description: 'Find licensed therapists in your area',
-                    url: 'https://www.psychologytoday.com/'
-                },
-                {
-                    title: 'Mental Health America',
-                    description: 'Resources and screening tools',
-                    url: 'https://www.mhanational.org/'
-                }
-            ],
-            message: 'You are not alone. Help is available, and recovery is possible.'
-        };
+        let crisisSupport;
+        
+        // Try Fireworks AI first, fallback to static data
+        try {
+            crisisSupport = await fireworksAIService.getCrisisSupport();
+            logger.info('Using Fireworks AI for crisis support');
+        } catch (fireworksError) {
+            logger.warn('Fireworks AI failed, using static crisis support:', fireworksError.message);
+            crisisSupport = {
+                hotlines: [
+                    {
+                        name: 'National Suicide Prevention Lifeline',
+                        number: '988',
+                        website: 'https://988lifeline.org/'
+                    },
+                    {
+                        name: 'Crisis Text Line',
+                        number: 'Text HOME to 741741',
+                        website: 'https://www.crisistextline.org/'
+                    },
+                    {
+                        name: 'Veterans Crisis Line',
+                        number: '1-800-273-8255, Press 1',
+                        website: 'https://www.veteranscrisisline.net/'
+                    }
+                ],
+                resources: [
+                    {
+                        title: 'Find a Therapist',
+                        description: 'Find licensed therapists in your area',
+                        url: 'https://www.psychologytoday.com/'
+                    },
+                    {
+                        title: 'Mental Health America',
+                        description: 'Resources and screening tools',
+                        url: 'https://www.mhanational.org/'
+                    }
+                ],
+                message: 'You are not alone. Help is available, and recovery is possible.'
+            };
+        }
         
         return responseService.success(res, crisisSupport, 'Crisis support resources retrieved');
     } catch (error) {

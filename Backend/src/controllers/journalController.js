@@ -1,5 +1,6 @@
 const JournalEntry = require('../models/JournalEntry');
 const aiService = require('../services/sentimentService');
+const fireworksAIService = require('../services/fireworksAIService');
 const responseService = require('../services/responseService');
 const logger = require('../utils/logger');
 
@@ -17,8 +18,20 @@ const createEntry = async (req, res) => {
         }
 
         // Analyze sentiment and generate AI response
-        const analysis = await aiService.analyzeSentiment(content);
-        const aiResponse = responseService.generateAIResponse(mood, content, analysis.score, analysis.features);
+        let analysis;
+        let aiResponse;
+        
+        try {
+            // Try Fireworks AI first
+            analysis = await fireworksAIService.analyzeSentiment(content);
+            aiResponse = await fireworksAIService.generateResponse(content, mood, emotions, 'journal');
+            logger.info('Using Fireworks AI for journal entry analysis');
+        } catch (fireworksError) {
+            // Fallback to local analysis
+            logger.warn('Fireworks AI failed, using local analysis:', fireworksError.message);
+            analysis = await aiService.analyzeSentiment(content);
+            aiResponse = responseService.generateAIResponse(mood, content, analysis.score, analysis.features);
+        }
 
         const entry = await JournalEntry.create({
             userId,

@@ -25,211 +25,306 @@ const Profile = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-
         try {
-            await updateUserProfile({
-                displayName: formData.displayName
-            });
+            await updateUserProfile(formData);
             setIsEditing(false);
-        } catch (error) {
-            console.error('Profile update error:', error);
+        } catch (err) {
+            console.error('Profile update error:', err);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleCancel = () => {
-        setFormData({
-            displayName: user?.displayName || '',
-            email: user?.email || ''
-        });
-        setIsEditing(false);
-        clearError();
-    };
+    if (isLoading) {
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '50vh'
+            }}>
+                <LoadingSpinner />
+            </div>
+        );
+    }
 
     return (
-        <div className="profile-page">
-            <div className="profile-header">
-                <h1>Profile Settings</h1>
-                <p>Manage your account and preferences</p>
+        <div style={{
+            padding: '2rem',
+            maxWidth: '800px',
+            margin: '0 auto'
+        }}>
+            {/* Header */}
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '2rem',
+                paddingBottom: '1rem',
+                borderBottom: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`
+            }}>
+                <div>
+                    <h1 style={{
+                        fontSize: '2.5rem',
+                        fontWeight: 'bold',
+                        background: 'linear-gradient(135deg, #6366f1, #7c3aed)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                        marginBottom: '0.5rem'
+                    }}>
+                        Profile
+                    </h1>
+                    <p style={{
+                        color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+                        margin: 0
+                    }}>
+                        Manage your account settings and preferences
+                    </p>
+                </div>
+                
+                <button 
+                    onClick={toggleTheme}
+                    style={{
+                        padding: '0.75rem',
+                        borderRadius: '0.75rem',
+                        border: 'none',
+                        background: theme === 'dark' ? '#374151' : '#f3f4f6',
+                        color: theme === 'dark' ? '#f9fafb' : '#374151',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        fontSize: '1.25rem'
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = theme === 'dark' ? '#4b5563' : '#e5e7eb'}
+                    onMouseLeave={(e) => e.target.style.background = theme === 'dark' ? '#374151' : '#f3f4f6'}
+                >
+                    {theme === 'dark' ? '☀️' : '🌙'}
+                </button>
             </div>
 
-            <div className="profile-container">
-                {/* Profile Information */}
-                <div className="profile-card">
-                    <div className="profile-card-header">
-                        <h2>Profile Information</h2>
-                        {!isEditing && (
-                            <button
-                                className="btn btn-secondary"
-                                onClick={() => setIsEditing(true)}
+            {error && <ErrorMessage message={error} />}
+
+            <div style={{
+                background: theme === 'dark' ? '#1f2937' : '#ffffff',
+                borderRadius: '1rem',
+                padding: '2rem',
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+                border: theme === 'dark' ? '1px solid #374151' : '1px solid #e5e7eb'
+            }}>
+                <h2 style={{
+                    fontSize: '1.5rem',
+                    fontWeight: '600',
+                    color: theme === 'dark' ? '#f9fafb' : '#111827',
+                    marginBottom: '1.5rem'
+                }}>
+                    Account Information
+                </h2>
+                
+                {isEditing ? (
+                    <form onSubmit={handleSubmit}>
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label htmlFor="displayName" style={{
+                                display: 'block',
+                                marginBottom: '0.5rem',
+                                fontWeight: '500',
+                                color: theme === 'dark' ? '#f9fafb' : '#374151'
+                            }}>
+                                Display Name
+                            </label>
+                            <input
+                                type="text"
+                                id="displayName"
+                                name="displayName"
+                                value={formData.displayName}
+                                onChange={handleChange}
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    border: `2px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
+                                    borderRadius: '0.5rem',
+                                    fontSize: '1rem',
+                                    background: theme === 'dark' ? '#374151' : '#ffffff',
+                                    color: theme === 'dark' ? '#f9fafb' : '#374151',
+                                    transition: 'border-color 0.2s'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                                onBlur={(e) => e.target.style.borderColor = theme === 'dark' ? '#374151' : '#e5e7eb'}
+                            />
+                        </div>
+                        
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label htmlFor="email" style={{
+                                display: 'block',
+                                marginBottom: '0.5rem',
+                                fontWeight: '500',
+                                color: theme === 'dark' ? '#f9fafb' : '#374151'
+                            }}>
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    border: `2px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
+                                    borderRadius: '0.5rem',
+                                    fontSize: '1rem',
+                                    background: theme === 'dark' ? '#374151' : '#ffffff',
+                                    color: theme === 'dark' ? '#f9fafb' : '#374151',
+                                    transition: 'border-color 0.2s'
+                                }}
+                                onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                                onBlur={(e) => e.target.style.borderColor = theme === 'dark' ? '#374151' : '#e5e7eb'}
+                            />
+                        </div>
+                        
+                        <div style={{
+                            display: 'flex',
+                            gap: '1rem',
+                            marginTop: '2rem'
+                        }}>
+                            <button 
+                                type="submit" 
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '0.5rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+                                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
                             >
-                                Edit Profile
+                                Save Changes
                             </button>
-                        )}
-                    </div>
-
-                    <ErrorMessage error={error} onDismiss={clearError} />
-
-                    {isEditing ? (
-                        <form className="profile-form" onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label htmlFor="displayName">Display Name</label>
-                                <input
-                                    type="text"
-                                    id="displayName"
-                                    name="displayName"
-                                    value={formData.displayName}
-                                    onChange={handleChange}
-                                    placeholder="Enter your display name"
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="email">Email</label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    value={formData.email}
-                                    disabled
-                                    className="input-disabled"
-                                />
-                                <small className="form-help">Email cannot be changed</small>
-                            </div>
-
-                            <div className="form-actions">
-                                <button
-                                    type="button"
-                                    className="btn btn-outline"
-                                    onClick={handleCancel}
-                                    disabled={isLoading}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary"
-                                    disabled={isLoading}
-                                >
-                                    {isLoading ? <LoadingSpinner size="small" /> : 'Save Changes'}
-                                </button>
-                            </div>
-                        </form>
-                    ) : (
-                        <div className="profile-info">
-                            <div className="info-item">
-                                <label>Display Name</label>
-                                <span>{user?.displayName || 'Not set'}</span>
-                            </div>
-                            <div className="info-item">
-                                <label>Email</label>
-                                <span>{user?.email}</span>
-                            </div>
-                            <div className="info-item">
-                                <label>User ID</label>
-                                <span className="user-id">{user?.uid}</span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* App Preferences */}
-                <div className="profile-card">
-                    <div className="profile-card-header">
-                        <h2>App Preferences</h2>
-                    </div>
-
-                    <div className="preferences-list">
-                        <div className="preference-item">
-                            <div className="preference-info">
-                                <h3>Dark Mode</h3>
-                                <p>Toggle between light and dark themes</p>
-                            </div>
-                            <button
-                                className={`toggle-switch ${theme === 'dark' ? 'active' : ''}`}
-                                onClick={toggleTheme}
+                            <button 
+                                type="button" 
+                                onClick={() => setIsEditing(false)}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    background: theme === 'dark' ? '#374151' : '#f3f4f6',
+                                    color: theme === 'dark' ? '#f9fafb' : '#374151',
+                                    border: 'none',
+                                    borderRadius: '0.5rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.target.style.background = theme === 'dark' ? '#4b5563' : '#e5e7eb'}
+                                onMouseLeave={(e) => e.target.style.background = theme === 'dark' ? '#374151' : '#f3f4f6'}
                             >
-                                <span className="toggle-slider"></span>
+                                Cancel
                             </button>
                         </div>
-
-                        <div className="preference-item">
-                            <div className="preference-info">
-                                <h3>Notifications</h3>
-                                <p>Daily reminders to journal</p>
+                    </form>
+                ) : (
+                    <div>
+                        <div style={{
+                            display: 'grid',
+                            gap: '1.5rem',
+                            marginBottom: '2rem'
+                        }}>
+                            <div style={{
+                                padding: '1rem',
+                                background: theme === 'dark' ? '#374151' : '#f9fafb',
+                                borderRadius: '0.5rem',
+                                border: `1px solid ${theme === 'dark' ? '#4b5563' : '#e5e7eb'}`
+                            }}>
+                                <div style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: '500',
+                                    color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+                                    marginBottom: '0.25rem'
+                                }}>
+                                    Display Name
+                                </div>
+                                <div style={{
+                                    fontSize: '1rem',
+                                    color: theme === 'dark' ? '#f9fafb' : '#111827',
+                                    fontWeight: '500'
+                                }}>
+                                    {user?.displayName || 'Not set'}
+                                </div>
                             </div>
-                            <button className="toggle-switch">
-                                <span className="toggle-slider"></span>
-                            </button>
-                        </div>
-
-                        <div className="preference-item">
-                            <div className="preference-info">
-                                <h3>AI Responses</h3>
-                                <p>Get AI-generated responses to your entries</p>
+                            
+                            <div style={{
+                                padding: '1rem',
+                                background: theme === 'dark' ? '#374151' : '#f9fafb',
+                                borderRadius: '0.5rem',
+                                border: `1px solid ${theme === 'dark' ? '#4b5563' : '#e5e7eb'}`
+                            }}>
+                                <div style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: '500',
+                                    color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+                                    marginBottom: '0.25rem'
+                                }}>
+                                    Email
+                                </div>
+                                <div style={{
+                                    fontSize: '1rem',
+                                    color: theme === 'dark' ? '#f9fafb' : '#111827',
+                                    fontWeight: '500'
+                                }}>
+                                    {user?.email || 'Not set'}
+                                </div>
                             </div>
-                            <button className="toggle-switch active">
-                                <span className="toggle-slider"></span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Data & Privacy */}
-                <div className="profile-card">
-                    <div className="profile-card-header">
-                        <h2>Data & Privacy</h2>
-                    </div>
-
-                    <div className="data-actions">
-                        <div className="data-item">
-                            <div className="data-info">
-                                <h3>Export Data</h3>
-                                <p>Download all your journal entries and mood data</p>
+                            
+                            <div style={{
+                                padding: '1rem',
+                                background: theme === 'dark' ? '#374151' : '#f9fafb',
+                                borderRadius: '0.5rem',
+                                border: `1px solid ${theme === 'dark' ? '#4b5563' : '#e5e7eb'}`
+                            }}>
+                                <div style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: '500',
+                                    color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+                                    marginBottom: '0.25rem'
+                                }}>
+                                    Member Since
+                                </div>
+                                <div style={{
+                                    fontSize: '1rem',
+                                    color: theme === 'dark' ? '#f9fafb' : '#111827',
+                                    fontWeight: '500'
+                                }}>
+                                    {user?.createdAt 
+                                        ? new Date(user.createdAt).toLocaleDateString()
+                                        : 'Unknown'
+                                    }
+                                </div>
                             </div>
-                            <button className="btn btn-outline">
-                                Export Data
-                            </button>
                         </div>
-
-                        <div className="data-item">
-                            <div className="data-info">
-                                <h3>Delete Account</h3>
-                                <p>Permanently delete your account and all data</p>
-                            </div>
-                            <button className="btn btn-danger">
-                                Delete Account
-                            </button>
-                        </div>
+                        
+                        <button 
+                            onClick={() => setIsEditing(true)}
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '0.5rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+                            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+                        >
+                            Edit Profile
+                        </button>
                     </div>
-                </div>
-
-                {/* App Information */}
-                <div className="profile-card">
-                    <div className="profile-card-header">
-                        <h2>About MoodMate</h2>
-                    </div>
-
-                    <div className="app-info">
-                        <div className="info-item">
-                            <label>Version</label>
-                            <span>1.0.0</span>
-                        </div>
-                        <div className="info-item">
-                            <label>Last Updated</label>
-                            <span>January 2025</span>
-                        </div>
-                        <div className="info-item">
-                            <label>Privacy Policy</label>
-                            <a href="/privacy" className="link">View Policy</a>
-                        </div>
-                        <div className="info-item">
-                            <label>Terms of Service</label>
-                            <a href="/terms" className="link">View Terms</a>
-                        </div>
-                    </div>
-                </div>
+                )}
             </div>
         </div>
     );
